@@ -1,0 +1,227 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  The Crazy Game — companion theme.
+
+  The board is a beach: Crazy River, Sharky Shores, whirlpools, Life
+  Preservers. The palette follows it — sand and sea foam in light mode, deep
+  water at night — so the app reads as part of the game rather than as a
+  generic chat demo.
+*/
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-surf: var(--surf);
+  --color-sand: var(--sand);
+  --color-coral: var(--coral);
+  --color-coral-foreground: var(--coral-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --radius: 0.9rem;
+
+  --background: oklch(0.982 0.012 88);
+  --foreground: oklch(0.26 0.035 235);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.26 0.035 235);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.26 0.035 235);
+
+  --primary: oklch(0.53 0.108 218);
+  --primary-foreground: oklch(0.99 0.005 200);
+  --secondary: oklch(0.945 0.025 200);
+  --secondary-foreground: oklch(0.34 0.055 225);
+
+  --muted: oklch(0.955 0.014 90);
+  --muted-foreground: oklch(0.5 0.028 230);
+  --accent: oklch(0.93 0.036 195);
+  --accent-foreground: oklch(0.3 0.06 225);
+
+  --destructive: oklch(0.577 0.222 25);
+  --border: oklch(0.9 0.018 210);
+  --input: oklch(0.9 0.018 210);
+  --ring: oklch(0.62 0.09 210);
+
+  --surf: oklch(0.88 0.055 195);
+  --sand: oklch(0.93 0.045 82);
+  --coral: oklch(0.7 0.155 38);
+  --coral-foreground: oklch(0.99 0.01 60);
+
+  --chart-1: oklch(0.53 0.108 218);
+  --chart-2: oklch(0.7 0.155 38);
+  --chart-3: oklch(0.66 0.09 178);
+  --chart-4: oklch(0.75 0.1 85);
+  --chart-5: oklch(0.45 0.09 260);
+
+  --sidebar: oklch(0.97 0.014 90);
+  --sidebar-foreground: oklch(0.26 0.035 235);
+  --sidebar-primary: oklch(0.53 0.108 218);
+  --sidebar-primary-foreground: oklch(0.99 0.005 200);
+  --sidebar-accent: oklch(0.93 0.036 195);
+  --sidebar-accent-foreground: oklch(0.3 0.06 225);
+  --sidebar-border: oklch(0.9 0.018 210);
+  --sidebar-ring: oklch(0.62 0.09 210);
+}
+
+.dark {
+  --background: oklch(0.195 0.032 240);
+  --foreground: oklch(0.95 0.012 210);
+  --card: oklch(0.245 0.032 238);
+  --card-foreground: oklch(0.95 0.012 210);
+  --popover: oklch(0.245 0.032 238);
+  --popover-foreground: oklch(0.95 0.012 210);
+
+  --primary: oklch(0.75 0.105 200);
+  --primary-foreground: oklch(0.2 0.04 235);
+  --secondary: oklch(0.3 0.034 235);
+  --secondary-foreground: oklch(0.94 0.012 210);
+
+  --muted: oklch(0.29 0.03 236);
+  --muted-foreground: oklch(0.72 0.022 215);
+  --accent: oklch(0.33 0.045 220);
+  --accent-foreground: oklch(0.95 0.012 210);
+
+  --destructive: oklch(0.68 0.175 24);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.62 0.08 205);
+
+  --surf: oklch(0.42 0.07 205);
+  --sand: oklch(0.38 0.045 80);
+  --coral: oklch(0.72 0.145 40);
+  --coral-foreground: oklch(0.2 0.04 40);
+
+  --chart-1: oklch(0.75 0.105 200);
+  --chart-2: oklch(0.72 0.145 40);
+  --chart-3: oklch(0.7 0.09 170);
+  --chart-4: oklch(0.78 0.09 88);
+  --chart-5: oklch(0.65 0.1 275);
+
+  --sidebar: oklch(0.225 0.032 240);
+  --sidebar-foreground: oklch(0.95 0.012 210);
+  --sidebar-primary: oklch(0.75 0.105 200);
+  --sidebar-primary-foreground: oklch(0.2 0.04 235);
+  --sidebar-accent: oklch(0.33 0.045 220);
+  --sidebar-accent-foreground: oklch(0.95 0.012 210);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.62 0.08 205);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    /* Keep iOS from zooming the viewport when the composer gains focus. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /*
+    A faint horizon wash behind the chat: warm sand at the bottom of the
+    screen, open water above. Pure CSS gradients — no image, no animation
+    library, nothing to download.
+  */
+  .tcg-shell {
+    background-image:
+      radial-gradient(
+        130% 78% at 50% -14%,
+        color-mix(in oklab, var(--surf) 55%, transparent) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        120% 60% at 50% 118%,
+        color-mix(in oklab, var(--sand) 62%, transparent) 0%,
+        transparent 68%
+      );
+    background-attachment: fixed;
+  }
+
+  /* Answer typography: Claude replies in light Markdown. */
+  .tcg-answer > * + * {
+    @apply mt-3;
+  }
+
+  .tcg-answer ul,
+  .tcg-answer ol {
+    @apply space-y-1.5 ps-5;
+  }
+
+  .tcg-answer ul {
+    @apply list-disc;
+  }
+
+  .tcg-answer ol {
+    @apply list-decimal;
+  }
+
+  .tcg-answer li::marker {
+    color: color-mix(in oklab, var(--primary) 75%, transparent);
+  }
+
+  .tcg-answer strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .tcg-answer code {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+}
+
+@utility scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent)
+    transparent;
+}

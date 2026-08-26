@@ -29,9 +29,9 @@ export function AdminLogin() {
       });
 
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
         setError(payload?.error ?? "Sign-in failed. Please try again.");
         return;
       }

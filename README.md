@@ -219,13 +219,27 @@ If the deployment URL ever changes, re-run the command and reprint.
 
 Go to `/admin` on the deployed site and enter the admin password.
 
-- **Log table** — every logged question and answer, newest first, 25 per page.
-  Click any row to expand the full text. On a phone the same data renders as a
-  stacked list rather than a table, so it stays readable without sideways
-  scrolling.
-- **Session column** — the first 8 characters of the anonymous session ID. Rows
-  sharing that value came from the same visit, so you can read a conversation in
-  order. Hover to see the full ID.
+The page has two views:
+
+**Conversations** (the default) groups every question by anonymous session and
+shows each one as a chat transcript, in the order the tester asked. This is the
+view for understanding *why* someone got stuck — you can see the follow-up they
+needed and whether the assistant's clarifying question actually helped. Each
+card header shows the session ID, when it started, how many questions were
+asked and how long the session lasted. Click a header to collapse it; collapsed
+cards show the opening question, so a page of them reads as an index. 10
+sessions per page.
+
+**All questions** is the flat table — Timestamp, Session, Question, Answer,
+newest first, 25 per page. Click any row to expand the full text. Use it to
+scan a lot of questions quickly, or to spot the same confusion recurring across
+different sessions. On a phone the same data renders as a stacked list rather
+than a table, so it stays readable without sideways scrolling.
+
+Both views page on the server: MongoDB only ever returns the page you're
+looking at, so the admin page stays fast no matter how much playtest history
+accumulates. Paging or switching view returns you to the top of the list.
+
 - **Download CSV** — exports every logged interaction, with
   `timestamp, sessionId, question, answer, model, latencyMs, turnIndex`. Values
   are properly quoted, so commas, quotes and line breaks inside an answer won't

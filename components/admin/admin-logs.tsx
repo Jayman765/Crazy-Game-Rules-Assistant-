@@ -10,65 +10,42 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { LogTable, type LogRow } from "@/components/admin/log-table";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  SessionThreads,
+  type SessionThread,
+} from "@/components/admin/session-threads";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type LogRow = {
-  id: string;
-  sessionId: string;
-  question: string;
-  answer: string;
-  timestamp: string;
-  model?: string;
-  latencyMs?: number;
-};
+type View = "sessions" | "table";
 
-type LogPage = {
-  rows: LogRow[];
+type Paged = {
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
 };
 
-const PAGE_SIZE = 25;
+type TablePage = Paged & { rows: LogRow[] };
+type SessionPage = Paged & { sessions: SessionThread[] };
 
-function formatTimestamp(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-/** Groups a session's rows visually without inventing a colour per session. */
-function shortSession(sessionId: string): string {
-  return sessionId.slice(0, 8);
-}
+/** Sessions hold several turns each, so fewer fit comfortably on a page. */
+const PAGE_SIZE: Record<View, number> = { sessions: 10, table: 25 };
 
 export function AdminLogs() {
   const router = useRouter();
+  const [view, setView] = useState<View>("sessions");
   const [page, setPage] = useState(1);
   /** Bumped by the Refresh button to re-run the query for the same page. */
   const [nonce, setNonce] = useState(0);
-  const [data, setData] = useState<LogPage | null>(null);
+
+  const [data, setData] = useState<TablePage | SessionPage | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   // `loading` is derived rather than stored, so the effect below never has to
   // set state synchronously on render.
-  const requestKey = `${page}:${nonce}`;
+  const requestKey = `${view}:${page}:${nonce}`;
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = loadedKey !== requestKey;
 
@@ -77,8 +54,9 @@ export function AdminLogs() {
 
     void (async () => {
       try {
+        // Paging happens in MongoDB — the server only ever returns this page.
         const response = await fetch(
-          `/api/admin/logs?page=${page}&pageSize=${PAGE_SIZE}`,
+          `/api/admin/logs?view=${view}&page=${page}&pageSize=${PAGE_SIZE[view]}`,
           { cache: "no-store" },
         );
         if (cancelled) return;
@@ -100,7 +78,7 @@ export function AdminLogs() {
           return;
         }
 
-        const payload = (await response.json()) as LogPage;
+        const payload = (await response.json()) as TablePage | SessionPage;
         if (cancelled) return;
         setError(null);
         setData(payload);
@@ -115,14 +93,45 @@ export function AdminLogs() {
     return () => {
       cancelled = true;
     };
-  }, [page, requestKey, router]);
+  }, [page, requestKey, router, view]);
+
+  /**
+   * Paging and view switches replace the whole list, so send the reader back to
+   * the top — otherwise they land halfway down a page they haven't seen.
+   *
+   * Instant rather than smooth: the re-render that follows cancels an in-flight
+   * smooth scroll, leaving the reader stranded at the old offset.
+   */
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function goToPage(next: number) {
+    setPage(next);
+    scrollToTop();
+  }
+
+  function switchView(next: View) {
+    if (next === view) return;
+    setView(next);
+    setPage(1);
+    setData(null);
+    scrollToTop();
+  }
 
   async function handleSignOut() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.refresh();
   }
 
-  const rows = data?.rows ?? [];
+  const sessions = data && "sessions" in data ? data.sessions : [];
+  const rows = data && "rows" in data ? data.rows : [];
+
+  const summary = !data
+    ? "Loading…"
+    : view === "sessions"
+      ? `${data.total.toLocaleString()} conversation${data.total === 1 ? "" : "s"} · newest first`
+      : `${data.total.toLocaleString()} logged question${data.total === 1 ? "" : "s"} · newest first`;
 
   return (
     <div className="tcg-shell min-h-[100dvh]">
@@ -133,9 +142,7 @@ export function AdminLogs() {
               Playtest Logs
             </h1>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              {data
-                ? `${data.total.toLocaleString()} logged question${data.total === 1 ? "" : "s"} · newest first`
-                : "Loading…"}
+              {summary}
             </p>
           </div>
 
@@ -160,7 +167,8 @@ export function AdminLogs() {
               render={<a href="/api/admin/logs/export" download />}
             >
               <Download />
-              Download CSV
+              <span className="hidden sm:inline">Download CSV</span>
+              <span className="sm:hidden">CSV</span>
             </Button>
 
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -172,6 +180,30 @@ export function AdminLogs() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <div className="mb-4 inline-flex rounded-xl border border-border/70 bg-card p-1 shadow-sm">
+          {(
+            [
+              ["sessions", "Conversations"],
+              ["table", "All questions"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => switchView(value)}
+              aria-pressed={view === value}
+              className={cn(
+                "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                view === value
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {error && (
           <p
             role="alert"
@@ -181,146 +213,11 @@ export function AdminLogs() {
           </p>
         )}
 
-        {/*
-          Phones get a stacked list instead of the table. A four-column table
-          needs ~830px to stay readable, which on a 390px screen means every
-          row is a horizontal scroll away — unusable for skimming what confused
-          a tester.
-        */}
-        <div className="flex flex-col gap-3 sm:hidden">
-          {rows.length === 0 && !loading && (
-            <p className="rounded-2xl border border-border/70 bg-card px-4 py-12 text-center text-sm text-muted-foreground shadow-sm">
-              No questions logged yet. They appear here as soon as playtesters
-              start asking.
-            </p>
-          )}
-
-          {rows.map((row) => {
-            const isOpen = expanded === row.id;
-            return (
-              <button
-                key={row.id}
-                type="button"
-                onClick={() => setExpanded(isOpen ? null : row.id)}
-                className="rounded-2xl border border-border/70 bg-card p-4 text-start shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                <div className="mb-2 flex items-center justify-between gap-2 text-[0.6875rem] text-muted-foreground">
-                  <span className="tabular-nums">
-                    {formatTimestamp(row.timestamp)}
-                  </span>
-                  <span className="font-mono">
-                    {shortSession(row.sessionId)}
-                  </span>
-                </div>
-
-                <p
-                  className={`text-sm font-medium break-words ${isOpen ? "whitespace-pre-wrap" : "line-clamp-3"}`}
-                >
-                  {row.question}
-                </p>
-
-                <p
-                  className={`mt-2 text-sm break-words text-muted-foreground ${isOpen ? "whitespace-pre-wrap" : "line-clamp-4"}`}
-                >
-                  {row.answer}
-                </p>
-
-                <span className="mt-2 inline-block text-xs text-primary">
-                  {isOpen ? "Tap to collapse" : "Tap to expand"}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/*
-          `table-fixed` is what makes the answer column readable: with auto
-          layout the table sizes itself to the longest answer (thousands of
-          pixels wide) and `line-clamp` never engages. Fixed layout pins the
-          columns so long text wraps and clamps inside its cell instead.
-        */}
-        <div className="hidden overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm sm:block">
-          <Table className="min-w-[52rem] table-fixed">
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[10.5rem] whitespace-nowrap">
-                  Timestamp
-                </TableHead>
-                <TableHead className="w-[6.5rem] whitespace-nowrap">
-                  Session
-                </TableHead>
-                <TableHead className="w-[30%]">Question</TableHead>
-                <TableHead>Answer</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {rows.length === 0 && !loading && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="py-16 text-center text-sm text-muted-foreground"
-                  >
-                    No questions logged yet. They appear here as soon as
-                    playtesters start asking.
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {rows.map((row) => {
-                const isOpen = expanded === row.id;
-                return (
-                  <TableRow
-                    key={row.id}
-                    onClick={() => setExpanded(isOpen ? null : row.id)}
-                    className="cursor-pointer align-top"
-                  >
-                    <TableCell className="py-3 align-top text-xs whitespace-nowrap text-muted-foreground tabular-nums">
-                      {formatTimestamp(row.timestamp)}
-                    </TableCell>
-
-                    <TableCell
-                      title={row.sessionId}
-                      className="truncate py-3 align-top font-mono text-xs text-muted-foreground"
-                    >
-                      {shortSession(row.sessionId)}
-                    </TableCell>
-
-                    {/*
-                      `whitespace-normal` is required: TableCell ships with
-                      `whitespace-nowrap`, which the text would otherwise
-                      inherit and run straight off the side of the column.
-                    */}
-                    <TableCell className="py-3 align-top text-sm font-medium break-words whitespace-normal">
-                      <p
-                        className={
-                          isOpen ? "whitespace-pre-wrap" : "line-clamp-3"
-                        }
-                      >
-                        {row.question}
-                      </p>
-                    </TableCell>
-
-                    <TableCell className="py-3 align-top text-sm break-words whitespace-normal text-muted-foreground">
-                      <p
-                        className={
-                          isOpen ? "whitespace-pre-wrap" : "line-clamp-3"
-                        }
-                      >
-                        {row.answer}
-                      </p>
-                      {!isOpen && row.answer.length > 220 && (
-                        <span className="mt-1 inline-block text-xs text-primary">
-                          Click to expand
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        {view === "sessions" ? (
+          <SessionThreads sessions={sessions} loading={loading} />
+        ) : (
+          <LogTable rows={rows} loading={loading} />
+        )}
 
         {data && data.totalPages > 1 && (
           <div className="mt-4 flex items-center justify-between gap-3">
@@ -332,7 +229,7 @@ export function AdminLogs() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                onClick={() => goToPage(Math.max(1, data.page - 1))}
                 disabled={loading || data.page <= 1}
               >
                 <ChevronLeft />
@@ -342,7 +239,7 @@ export function AdminLogs() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setPage((current) => Math.min(data.totalPages, current + 1))
+                  goToPage(Math.min(data.totalPages, data.page + 1))
                 }
                 disabled={loading || data.page >= data.totalPages}
               >

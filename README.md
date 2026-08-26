@@ -220,7 +220,9 @@ If the deployment URL ever changes, re-run the command and reprint.
 Go to `/admin` on the deployed site and enter the admin password.
 
 - **Log table** — every logged question and answer, newest first, 25 per page.
-  Click any row to expand the full text.
+  Click any row to expand the full text. On a phone the same data renders as a
+  stacked list rather than a table, so it stays readable without sideways
+  scrolling.
 - **Session column** — the first 8 characters of the anonymous session ID. Rows
   sharing that value came from the same visit, so you can read a conversation in
   order. Hover to see the full ID.

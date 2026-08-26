@@ -68,6 +68,13 @@ export async function POST(request: Request) {
   }
   const latencyMs = Date.now() - startedAt;
 
+  // One line per answer in the Vercel function logs, so prompt-cache health is
+  // visible without opening the database. `cache_read` should dominate after
+  // the first question — see README §8.
+  console.log(
+    `[chat] ${latencyMs}ms model=${result.model} cache_read=${result.usage.cacheReadInputTokens} cache_write=${result.usage.cacheCreationInputTokens} uncached_in=${result.usage.inputTokens} out=${result.usage.outputTokens}`,
+  );
+
   // 9. Log the completed exchange. A logging failure must not cost the player
   // their answer, so it is caught and reported server-side only.
   try {

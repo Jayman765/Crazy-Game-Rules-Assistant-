@@ -91,9 +91,9 @@ export function AdminLogs() {
         }
 
         if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as
-            | { error?: string }
-            | null;
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
           if (cancelled) return;
           setError(payload?.error ?? "Could not load the logs.");
           setLoadedKey(requestKey);
@@ -156,6 +156,7 @@ export function AdminLogs() {
             */}
             <Button
               size="sm"
+              nativeButton={false}
               render={<a href="/api/admin/logs/export" download />}
             >
               <Download />
@@ -180,76 +181,145 @@ export function AdminLogs() {
           </p>
         )}
 
-        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[10.5rem] whitespace-nowrap">
-                    Timestamp
-                  </TableHead>
-                  <TableHead className="w-[7rem] whitespace-nowrap">
-                    Session
-                  </TableHead>
-                  <TableHead className="min-w-[16rem]">Question</TableHead>
-                  <TableHead className="min-w-[24rem]">Answer</TableHead>
-                </TableRow>
-              </TableHeader>
+        {/*
+          Phones get a stacked list instead of the table. A four-column table
+          needs ~830px to stay readable, which on a 390px screen means every
+          row is a horizontal scroll away — unusable for skimming what confused
+          a tester.
+        */}
+        <div className="flex flex-col gap-3 sm:hidden">
+          {rows.length === 0 && !loading && (
+            <p className="rounded-2xl border border-border/70 bg-card px-4 py-12 text-center text-sm text-muted-foreground shadow-sm">
+              No questions logged yet. They appear here as soon as playtesters
+              start asking.
+            </p>
+          )}
 
-              <TableBody>
-                {rows.length === 0 && !loading && (
-                  <TableRow>
+          {rows.map((row) => {
+            const isOpen = expanded === row.id;
+            return (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() => setExpanded(isOpen ? null : row.id)}
+                className="rounded-2xl border border-border/70 bg-card p-4 text-start shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <div className="mb-2 flex items-center justify-between gap-2 text-[0.6875rem] text-muted-foreground">
+                  <span className="tabular-nums">
+                    {formatTimestamp(row.timestamp)}
+                  </span>
+                  <span className="font-mono">
+                    {shortSession(row.sessionId)}
+                  </span>
+                </div>
+
+                <p
+                  className={`text-sm font-medium break-words ${isOpen ? "whitespace-pre-wrap" : "line-clamp-3"}`}
+                >
+                  {row.question}
+                </p>
+
+                <p
+                  className={`mt-2 text-sm break-words text-muted-foreground ${isOpen ? "whitespace-pre-wrap" : "line-clamp-4"}`}
+                >
+                  {row.answer}
+                </p>
+
+                <span className="mt-2 inline-block text-xs text-primary">
+                  {isOpen ? "Tap to collapse" : "Tap to expand"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/*
+          `table-fixed` is what makes the answer column readable: with auto
+          layout the table sizes itself to the longest answer (thousands of
+          pixels wide) and `line-clamp` never engages. Fixed layout pins the
+          columns so long text wraps and clamps inside its cell instead.
+        */}
+        <div className="hidden overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm sm:block">
+          <Table className="min-w-[52rem] table-fixed">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[10.5rem] whitespace-nowrap">
+                  Timestamp
+                </TableHead>
+                <TableHead className="w-[6.5rem] whitespace-nowrap">
+                  Session
+                </TableHead>
+                <TableHead className="w-[30%]">Question</TableHead>
+                <TableHead>Answer</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {rows.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="py-16 text-center text-sm text-muted-foreground"
+                  >
+                    No questions logged yet. They appear here as soon as
+                    playtesters start asking.
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {rows.map((row) => {
+                const isOpen = expanded === row.id;
+                return (
+                  <TableRow
+                    key={row.id}
+                    onClick={() => setExpanded(isOpen ? null : row.id)}
+                    className="cursor-pointer align-top"
+                  >
+                    <TableCell className="py-3 align-top text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+                      {formatTimestamp(row.timestamp)}
+                    </TableCell>
+
                     <TableCell
-                      colSpan={4}
-                      className="py-16 text-center text-sm text-muted-foreground"
+                      title={row.sessionId}
+                      className="truncate py-3 align-top font-mono text-xs text-muted-foreground"
                     >
-                      No questions logged yet. They appear here as soon as
-                      playtesters start asking.
+                      {shortSession(row.sessionId)}
+                    </TableCell>
+
+                    {/*
+                      `whitespace-normal` is required: TableCell ships with
+                      `whitespace-nowrap`, which the text would otherwise
+                      inherit and run straight off the side of the column.
+                    */}
+                    <TableCell className="py-3 align-top text-sm font-medium break-words whitespace-normal">
+                      <p
+                        className={
+                          isOpen ? "whitespace-pre-wrap" : "line-clamp-3"
+                        }
+                      >
+                        {row.question}
+                      </p>
+                    </TableCell>
+
+                    <TableCell className="py-3 align-top text-sm break-words whitespace-normal text-muted-foreground">
+                      <p
+                        className={
+                          isOpen ? "whitespace-pre-wrap" : "line-clamp-3"
+                        }
+                      >
+                        {row.answer}
+                      </p>
+                      {!isOpen && row.answer.length > 220 && (
+                        <span className="mt-1 inline-block text-xs text-primary">
+                          Click to expand
+                        </span>
+                      )}
                     </TableCell>
                   </TableRow>
-                )}
-
-                {rows.map((row) => {
-                  const isOpen = expanded === row.id;
-                  return (
-                    <TableRow
-                      key={row.id}
-                      onClick={() => setExpanded(isOpen ? null : row.id)}
-                      className="cursor-pointer align-top"
-                    >
-                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">
-                        {formatTimestamp(row.timestamp)}
-                      </TableCell>
-
-                      <TableCell
-                        title={row.sessionId}
-                        className="font-mono text-xs text-muted-foreground"
-                      >
-                        {shortSession(row.sessionId)}
-                      </TableCell>
-
-                      <TableCell className="text-sm font-medium">
-                        <p className={isOpen ? "whitespace-pre-wrap" : "line-clamp-3"}>
-                          {row.question}
-                        </p>
-                      </TableCell>
-
-                      <TableCell className="text-sm text-muted-foreground">
-                        <p className={isOpen ? "whitespace-pre-wrap" : "line-clamp-3"}>
-                          {row.answer}
-                        </p>
-                        {!isOpen && row.answer.length > 220 && (
-                          <span className="mt-1 inline-block text-xs text-primary">
-                            Click to expand
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
 
         {data && data.totalPages > 1 && (

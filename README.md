@@ -330,6 +330,51 @@ added to the system prompt: a single changed byte would invalidate the cache and
 put the full cost back on every question. Token counts in the CSV export
 (`cacheReadInputTokens`) let you confirm caching is working.
 
+### What it costs, and why caching matters
+
+Measured from this app's own logs. The reference documents are about **23,800
+tokens** on Claude Sonnet 5, and they are re-sent with every single question —
+that is what caching exists to solve.
+
+| Per question | Cost |
+|---|---|
+| Uncached (no prompt caching) | ~4.9¢ |
+| **Cached read (the normal case)** | **~0.7¢** |
+| Cache write (first question in an hour) | ~9.5¢ |
+
+So caching makes a repeat question roughly **7× cheaper**. The one-hour write
+costs about double a single uncached question, then pays for itself from the
+second or third question in that hour — and the cache is shared across *all*
+players, not per session, so one write covers everyone playing that evening.
+
+For scale: a playtest round of ~200 questions costs roughly **$3 with caching**
+versus **~$10 without**. You can confirm caching is live at any time — the
+Vercel function logs print one line per answer:
+
+```
+[chat] 4600ms model=claude-sonnet-5 cache_read=23780 cache_write=0 uncached_in=62 out=186
+```
+
+`cache_read` should be large on every question after the first. If it is
+persistently `0`, caching has broken and costs are ~7× higher than they should
+be.
+
+### On switching to a cheaper model
+
+`ANTHROPIC_MODEL` accepts any current Claude model, and `claude-haiku-4-5` is
+about half the price — which works out to roughly **$2 saved across an entire
+playtest round**. We tested it against the four hardest documented behaviours.
+Haiku handled the ambiguous-fork clarifying question, the bump sequencing and
+the Portal exception correctly, but failed the Bonus Golden Life Preserver
+question: the Master Rules document explicitly instructs the assistant to keep
+that answer simple and *not* volunteer the no-retroactive-taking nuance unless
+asked, and Haiku volunteered it anyway. Sonnet 5 followed the instruction.
+
+That is the tradeoff — about $2 per playtest round against reliability on the
+questions the rules documents care most about. The specification chose Sonnet 5
+for exactly this reason. Change it only as a deliberate decision, not to save
+money.
+
 ### Rate limiting
 
 Each IP gets 15 questions per minute and each chat session 10, both configurable.

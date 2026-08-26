@@ -25,6 +25,17 @@ export type AskResult = {
  */
 const MAX_TOKENS = 8192;
 
+/**
+ * `output_config.effort` is not accepted by every model — Haiku 4.5 rejects the
+ * whole request with a 400 ("This model does not support the effort
+ * parameter"). `ANTHROPIC_MODEL` is documented as configurable, so sending it
+ * unconditionally would turn a model swap into a hard outage on every question
+ * rather than a setting that simply does nothing.
+ */
+function supportsEffort(model: string): boolean {
+  return !model.startsWith("claude-haiku");
+}
+
 export async function askRulesAssistant(
   history: ChatMessage[],
   question: string,
@@ -48,7 +59,9 @@ export async function askRulesAssistant(
     messages,
     // Rules questions involve real multi-step conditional reasoning, but a
     // player is waiting mid-game — "medium" balances accuracy against latency.
-    output_config: { effort: "medium" },
+    ...(supportsEffort(model)
+      ? { output_config: { effort: "medium" as const } }
+      : {}),
   });
 
   const answer = response.content
@@ -58,7 +71,9 @@ export async function askRulesAssistant(
     .trim();
 
   if (!answer) {
-    throw new Error(`Empty response from Anthropic (stop_reason: ${response.stop_reason})`);
+    throw new Error(
+      `Empty response from Anthropic (stop_reason: ${response.stop_reason})`,
+    );
   }
 
   return {

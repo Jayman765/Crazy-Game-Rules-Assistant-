@@ -1,6 +1,6 @@
-# The Crazy Game — Board Layout Reference (v1 — CONFIRMED)
+# The Crazy Game — Board Layout Reference (v2 — CONFIRMED)
 
-**Status: Confirmed.** Built directly from a complete space-by-space description. Cross-validated against every previously-established fact in the Master Rules Reference (Crazy Beach Loop's both branches, the Spiral Portal's position, the Risky Rapids (−1) space position, the Bridge's two halves) — all matched exactly, with zero contradictions found.
+**Status: Confirmed. Content unchanged since v1** — version bumped only to stay aligned with the Master Rules Reference, now also at v2. Built directly from a complete space-by-space description. Cross-validated against every previously-established fact in the Master Rules Reference (Crazy Beach Loop's both branches, the Spiral Portal's position, the Risky Rapids (−1) space position, the Bridge's two halves) — all matched exactly, with zero contradictions found.
 
 **Legend:** B = Blank · S = Star · LP = Life Preserver · M = Mud · (−1) = Lose LP space · Smiley/Frowny numbers reflect board order of their *origin* (send) space, independently numbered per type.
 

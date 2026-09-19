@@ -261,7 +261,7 @@ Two independent, same-type-only portal pairs exist on the board. If you land on 
 - Landing on the Fish Pond without a Life Preserver
 - Losing your last Life Preserver anywhere in water
 
-**Re-entering at Crazy Beach:** If a Life Preserver is there, you get one (just one). See Section 5 for exit routes back onto the main path.
+**Re-entering at Crazy Beach:** If a Life Preserver is there, you get one (just one). **There is no fallback to another player if Crazy Beach is empty — this pickup is not guaranteed.** This is a real, deliberate difference from actual Life Preserver spaces and the Crazy River Junction (Section 12's "guaranteed pickup" corollary and Section 13), both of which do pull from another player if Crazy Beach has none. Re-entering after sinking is a penalty, not a guaranteed-supply moment, so if Crazy Beach happens to be empty right then, the player simply gets nothing and starts their next turn with whatever Life Preservers they already had (zero, if the one they just lost sinking was their last). **AI agent guidance:** Don't extend the nearby "pickup is always guaranteed" reasoning (Section 12) to this case — that corollary is specifically about landing on a genuine Life Preserver space or the Junction, not about re-entering at Crazy Beach after sinking. If a player asks whether they're guaranteed one back, the honest answer is no. See Section 5 for exit routes back onto the main path.
 
 **Getting & losing preservers:**
 - Earn one by bumping a player who has one, or by landing on a Life Preserver space.

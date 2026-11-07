@@ -64,7 +64,7 @@ B, B, **Frowny 4 (send)**, (−1), **Frowny 5 (send)**, (−1), B, Whirlpool, Wh
 | 1 | Segment 7, right after the Crazy River/alternate convergence | Segment 2, Mud Pond Loop right branch |
 | 2 | Segment 7 | Segment 5, shared with Smiley 4's entry |
 | 3 | Segment 7 | Segment 3, before Crazy Beach Loop junction |
-| 4 | Segment 8, Sharky Shores (1st of 2) | Segment 7, after the Bridge |
+| 4 | Segment 8, Sharky Shores (1st of 2) | Segment 7, after the Bridge — **exactly 9 spaces back from its own send space** (verified by direct count; don't re-derive this on the fly) |
 | 5 | Segment 8, Sharky Shores (2nd of 2 — the ~1/6-through jump) | Segment 2, Mud Pond Loop left branch |
 
 ## Portal Directory
